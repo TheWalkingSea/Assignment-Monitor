@@ -8,7 +8,7 @@ with open('config.json') as f:
     cf = json.load(f)
 
 
-courseData = cf['courseData']
+courseData: dict = cf['courseData']
 COURSEIDS = list(courseData.keys())
 
 # courseData = { # Testing
@@ -101,7 +101,13 @@ def sendWebhook(embed: discord.Embed, courseID: int):
 
 def compareDifferences(payload: str, courseID: int):
     global before
-    data: list = json.loads(payload)[0]['result']['data']
+    try:
+        data: list = json.loads(payload)[0]['result']['data']
+    except:  
+        with open("dmp", "w") as f:
+            f.write(payload)
+            print(f"ERROR OCCURRED: {payload}")
+        
     if (courseID not in before):
         before[courseID] = data
         return
@@ -151,12 +157,10 @@ def compareDifferences(payload: str, courseID: int):
 def checkGrades(sess: requests.Session):
     response = sess.get(f"https://pasco.focusschoolsoftware.com/focus/Modules.php?modname=Grades/StudentGBGrades.php&force_package=SIS&student_id={cf['studentId']}&course_period_id={COURSEIDS[0]}&side_school=33&side_mp={QUARTERID}", headers=headers)
     match = re.findall(r'__Module__\.token = \"(.+?)\"', response.text) # Token works for all courses
-    try:
+    if (match):
         token = match[2]
-    except:
-        with open("dmp", "w") as f:
-            f.write(response.text)
-            print(f"ERROR OCCURRED: {response.status_code}")
+    else:
+        return False
     for courseID in COURSEIDS:
         # response = sess.get(f"https://pasco.focusschoolsoftware.com/focus/Modules.php?modname=Grades/StudentGBGrades.php&force_package=SIS&student_id=511444&course_period_id={courseID}&side_school=33&side_mp=107016", headers=headers)
         # match = re.findall(r'__Module__\.token = \"(.+?)\"', response.text)
@@ -189,6 +193,7 @@ def checkGrades(sess: requests.Session):
                 print(f"ERROR OCCURRED: {response.status_code}")
         compareDifferences(response.text, courseID)
     time.sleep(60)
+    return True
 
 
 def main():
@@ -201,7 +206,10 @@ def main():
     print("Sent SAML Cookies, authorization complete")
     print("Monitoring grades")
     while (True):
-        checkGrades(sess)
+        flag = checkGrades(sess)
+        if (not flag): # Cookie is invalid, refresh the token
+            print("Token Invalid. Refreshing token...")
+            main()
 
 
 
