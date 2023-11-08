@@ -142,10 +142,10 @@ def compareDifferences(payload: str, courseID: int):
             embed = discord.Embed(title=f"Assignment in {courseData[courseID][1]} Graded", color=discord.Color.blue(), description=assn['ASSIGNMENT_TITLE'])
             embed.add_field(inline=True, name="Total Points", value=f"{assn['POINTS_POSSIBLE']} Points")
             sendWebhook(embed, courseID)
-        elif ((before_assn and before_assn['PERCENT']) and assn['PERCENT'] != before_assn['PERCENT']): # Check if the assignment existed beforehand, if it did, check if the grade changed before and after
+        elif ((before_assn and before_assn['PERCENT'] and before_assn != 'I') and assn['PERCENT'] != before_assn['PERCENT']): # Check if the assignment existed beforehand, if it did, check if the grade changed before and after
             print("Assignment updated: %s - %s" % (courseData[courseID][1], assn['ASSIGNMENT_TITLE']))
             embed = discord.Embed(title=f"Assignment in {courseData[courseID][1]} Updated", color=discord.Color.blue(), description=assn['ASSIGNMENT_TITLE'])
-            embed.add_field(inline=True, name="Curve", value=f"{float(0 if assn['POINTS_EARNED'] in ['I', 'NG'] else assn['POINTS_EARNED']) - float(0 if before_assn['POINTS_EARNED'] in ['I', 'NG'] else before_assn['POINTS_EARNED'])} Points")
+            embed.add_field(inline=True, name="Curve", value=f"{float(0 if assn['POINTS_EARNED'] == 'NG' else assn['POINTS_EARNED']) - float(0 if before_assn['POINTS_EARNED'] == 'NG' else before_assn['POINTS_EARNED'])} Points")
             embed.add_field(inline=True, name="Total Points", value=f"{assn['POINTS_POSSIBLE']} Points")
             sendWebhook(embed, courseID)
     
