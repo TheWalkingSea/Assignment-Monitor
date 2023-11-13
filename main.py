@@ -40,8 +40,10 @@ params = {
 def getSAMLCookies(sess: requests.Session):
     response = sess.get('https://pasco.focusschoolsoftware.com/focus/Modules.php?modname=misc%2FPortal.php', params=params, headers=headers)
     match = re.findall(r'value=\"(.+?)\"', response.text)
-    if (not match):
-        print(response.text)
+    if (not match): # Sometimes when refreshing token it throws an error getting cookies for some reason
+        time.sleep(5)
+        print("There was a problem getting SAML Cookies... Retrying\nContent: %s" % response.text)
+        return getSAMLCookies(sess)
     data = {
         'SAMLRequest': match[0],
         'RelayState': match[1]
