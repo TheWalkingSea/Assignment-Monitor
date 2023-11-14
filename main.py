@@ -115,8 +115,6 @@ def compareDifferences(payload: str, courseID: int):
     if (courseID not in before):
         before[courseID] = data
         return
-    import pyperclip
-    pyperclip.copy(payload)
     # input('hi')
 
 
