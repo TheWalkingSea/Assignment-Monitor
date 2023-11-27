@@ -37,7 +37,15 @@ params = {
     'client-request-id': 'dc05ce4b-7249-4891-6f47-0040010000d9',
 }
 
-def getSAMLCookies(sess: requests.Session):
+def getSAMLCookies(sess: requests.Session) -> requests.Response:
+    """ Gets SAML Cookies that are required to make any type of request to the website.
+    
+    Parameters:
+    (requests.Session)sess: A session that will keep track of cookies
+
+    Returns:
+    (requests.Response): Returns a response that will be used later in authorization.
+    """
     response = sess.get('https://pasco.focusschoolsoftware.com/focus/Modules.php?modname=misc%2FPortal.php', params=params, headers=headers)
     match = re.findall(r'value=\"(.+?)\"', response.text)
     if (not match): # Sometimes when refreshing token it throws an error getting cookies for some reason
@@ -56,7 +64,17 @@ def getSAMLCookies(sess: requests.Session):
 
 
 
-def auth(sess: requests.Session, req1: requests.Response):
+def auth(sess: requests.Session, req1: requests.Response) -> requests.Response:
+    """ Logs in using the SAML Cookies with a username and password. This will return a new authorized cookie
+    
+    Parameters:
+    (requests.Session)sess: Session that will keep track of cookies
+    (requests.Response)req1: The SAML Cookies request. This is used to extract cookies from the response because it was not adding to the session properly for some reason
+
+    Returns:
+    (request.Response): Returns the authorization response. This is primarily used for testing purposes.
+
+    """
     # I Passed the response because for some reason the SAML cookies dont transfer over on the new domain
     data = {
         'UserName': 'district\\%s'  % (cf['studentId']),
@@ -68,7 +86,13 @@ def auth(sess: requests.Session, req1: requests.Response):
     response = sess.get('https://pascosso.pasco.k12.fl.us/adfs/ls/', params=params, headers=headers, cookies=req1.cookies)
     return response
 
-def sendSAMLReq(sess: requests.Session):
+def sendSAMLReq(sess: requests.Session) -> None:
+    """ This function does some additional work that will convert the cookie from the pasco website to a cookie that works with focus school software
+    
+    Parameters:
+    (requests.Session)sess: A session that will keep track of cookies
+    
+    """
     response = sess.get('https://pasco.focusschoolsoftware.com/focus/index.php', headers=headers)
     match = re.findall(r'value=\"(.+?)\"', response.text)
     data = {
@@ -100,10 +124,23 @@ def sendSAMLReq(sess: requests.Session):
 
     return response
 
-def sendWebhook(embed: discord.Embed, courseID: int):
+def sendWebhook(embed: discord.Embed, courseID: int) -> None:
+    """ This will take the graded assignment and send it in the discord server 
+    
+    Parameters:
+    (discord.Embed)embed: The embed to send
+    (courseID): This will use the course ID to find out what role to ping
+    """
     WEBHOOK.send(content=f"<@&{courseData[courseID][0]}>", allowed_mentions=discord.AllowedMentions(roles=True), embed=embed, username="Opportunity", avatar_url="https://cdn.discordapp.com/attachments/891493636611641345/1163987969401688175/NASA_Mars_Rover.jpg?ex=65419345&is=652f1e45&hm=e7a03c4eadedbc69966ab5362ce379b04dfdb6e04f2c4bc3f89dedc2d88e22fb&")
 
-def compareDifferences(payload: str, courseID: int):
+def compareDifferences(payload: str, courseID: int) -> None:
+    """ Takes the payload beforehand and the new payload to compare them and determine if an assignment was updated or graded for a certain course.
+    
+    Parameters
+    (payload): The new payload
+    (courseID): The ID of the course currently being examined
+    
+    """
     global before
     try:
         data: list = json.loads(payload)[0]['result']['data']
@@ -156,7 +193,17 @@ def compareDifferences(payload: str, courseID: int):
 
 
 
-def checkGrades(sess: requests.Session):
+def checkGrades(sess: requests.Session) -> None:
+    """ This is the main function that will get the bigger payload and break it into parts and finally compares the differences to determine if it should send a webhook
+    
+    Parameters:
+    (requests.Session)sess: The session that keeps track of cookies
+    
+    Returns:
+    (bool): A boolean that returns the status of the function being ran. 
+        Sometimes this is false when the token is invalid and required it to be refreshed when running for long periods of time
+
+    """
     response = sess.get(f"https://pasco.focusschoolsoftware.com/focus/Modules.php?modname=Grades/StudentGBGrades.php&force_package=SIS&student_id={cf['studentId']}&course_period_id={COURSEIDS[0]}&side_school=33&side_mp={QUARTERID}", headers=headers)
     match = re.findall(r'__Module__\.token = \"(.+?)\"', response.text) # Token works for all courses
     if (match):
@@ -198,7 +245,7 @@ def checkGrades(sess: requests.Session):
     return True
 
 
-def main():
+def main() -> None:
     sess = requests.Session()
     resp = getSAMLCookies(sess)
     print("Getting SAML Cookies")
