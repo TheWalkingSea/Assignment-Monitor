@@ -1,0 +1,1 @@
+This program was made recently and I was trying to make this program for a long time when I was a beginner but I struggled with the SAML cookies and transferring an auth cookie from one website to another and how the tradeoff worked. However when I came back to it with a lot more experience I was able to chug through this project really easily.
