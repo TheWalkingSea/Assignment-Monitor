@@ -236,10 +236,10 @@ def checkGrades(sess: requests.Session) -> None:
                 headers=headersModWithContentType,
                 data=data
             )
-        except:
+        except Exception as e:
             with open("dmp", "w") as f:
                 f.write(response.text)
-                print(f"ERROR OCCURRED: {response.status_code}")
+                print(f"ERROR OCCURRED: {response.status_code}, Error: {e}")
         compareDifferences(response.text, courseID)
     time.sleep(60)
     return True
