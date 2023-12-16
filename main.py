@@ -204,7 +204,12 @@ def checkGrades(sess: requests.Session) -> None:
         Sometimes this is false when the token is invalid and required it to be refreshed when running for long periods of time
 
     """
-    response = sess.get(f"https://pasco.focusschoolsoftware.com/focus/Modules.php?modname=Grades/StudentGBGrades.php&force_package=SIS&student_id={cf['studentId']}&course_period_id={COURSEIDS[0]}&side_school=33&side_mp={QUARTERID}", headers=headers)
+    try:
+        response = sess.get(f"https://pasco.focusschoolsoftware.com/focus/Modules.php?modname=Grades/StudentGBGrades.php&force_package=SIS&student_id={cf['studentId']}&course_period_id={COURSEIDS[0]}&side_school=33&side_mp={QUARTERID}", headers=headers)
+    except requests.exceptions.ConnectionError:
+        print("Connection aborted by host. Retrying...")
+        time.sleep(10)
+        return checkGrades(sess)
     match = re.findall(r'__Module__\.token = \"(.+?)\"', response.text) # Token works for all courses
     if (match):
         token = match[2]
