@@ -11,12 +11,6 @@ with open('config.json') as f:
 courseData: dict = cf['courseData']
 COURSEIDS = list(courseData.keys())
 
-# courseData = { # Testing
-#     1024509: ("https://discord.com/api/webhooks/1142633545886597266/kFekjeC9Dk0Cq3Tjrhev4QrpbTPFRLtiEv_VtuGmfOls7wZFs0cHOIwpD1ouhMgVqRBX", "AP Seminar"), # General
-#     1024569: ("https://discord.com/api/webhooks/1142633545886597266/kFekjeC9Dk0Cq3Tjrhev4QrpbTPFRLtiEv_VtuGmfOls7wZFs0cHOIwpD1ouhMgVqRBX", "AP Chemistry"), # Chem
-#     1028258: ("https://discord.com/api/webhooks/1142633545886597266/kFekjeC9Dk0Cq3Tjrhev4QrpbTPFRLtiEv_VtuGmfOls7wZFs0cHOIwpD1ouhMgVqRBX", "AP Physics C"), # Physics
-#     1025433: ("https://discord.com/api/webhooks/1142633545886597266/kFekjeC9Dk0Cq3Tjrhev4QrpbTPFRLtiEv_VtuGmfOls7wZFs0cHOIwpD1ouhMgVqRBX", "APUSH")} # General
-
 QUARTERID = cf['quarterId']
 # Q1 107015
 # Q2 107016
@@ -34,7 +28,7 @@ headers = {
 }
 
 params = {
-    'client-request-id': 'dc05ce4b-7249-4891-6f47-0040010000d9',
+    'client-request-id': 'd9d56afb-4e10-4446-b11a-0040020000db',
 }
 
 def getSAMLCookies(sess: requests.Session) -> requests.Response:
@@ -81,6 +75,7 @@ def auth(sess: requests.Session, req1: requests.Response) -> requests.Response:
         'Password': cf['password'],
         'AuthMethod': 'FormsAuthentication',
     }
+    input(data)
     response = sess.post('https://pascosso.pasco.k12.fl.us/adfs/ls/', params=params, headers=headers, data=data, cookies=req1.cookies)
     # Previous request returns a redirect, below request just goes to the redirect which redirects to another page
     response = sess.get('https://pascosso.pasco.k12.fl.us/adfs/ls/', params=params, headers=headers, cookies=req1.cookies)
@@ -93,13 +88,14 @@ def sendSAMLReq(sess: requests.Session) -> None:
     (requests.Session)sess: A session that will keep track of cookies
     
     """
+    global params
     response = sess.get('https://pasco.focusschoolsoftware.com/focus/index.php', headers=headers)
     match = re.findall(r'value=\"(.+?)\"', response.text)
     data = {
         'SAMLRequest': match[0],
         'RelayState': match[1]
     }
-    response = sess.post('https://pascosso.pasco.k12.fl.us/adfs/ls/?client-request-id=554fd3f0-9920-486a-9355-0040000000b8', headers=headers, data=data)
+    response = sess.post('https://pascosso.pasco.k12.fl.us/adfs/ls/', params=params, headers=headers, data=data)
     match = re.findall(r'value=\"(.+?)\"', response.text)
     sess.get('https://pascosso.pasco.k12.fl.us/adfs/ls/', headers=headers)
 
@@ -216,9 +212,6 @@ def checkGrades(sess: requests.Session) -> None:
     else:
         return False
     for courseID in COURSEIDS:
-        # response = sess.get(f"https://pasco.focusschoolsoftware.com/focus/Modules.php?modname=Grades/StudentGBGrades.php&force_package=SIS&student_id=511444&course_period_id={courseID}&side_school=33&side_mp=107016", headers=headers)
-        # match = re.findall(r'__Module__\.token = \"(.+?)\"', response.text)
-        # token = match[2]
         jwttoken = sess.cookies.get('__session_jwt__')
         sess.get('https://pasco.focusschoolsoftware.com/focus/assets/translations/gettext.js.php?locale=en_US&m=1697492306?m=', headers=headers)
         params = {
@@ -254,9 +247,12 @@ def main() -> None:
     sess = requests.Session()
     resp = getSAMLCookies(sess)
     print("Getting SAML Cookies")
+    input(resp.cookies.get_dict().keys())
     auth(sess, resp)
+    input(resp.cookies.get_dict().keys())
     print("Logged in...")
     resp = sendSAMLReq(sess)
+    input(resp.cookies.get_dict())
     print("Sent SAML Cookies, authorization complete")
     print("Monitoring grades")
     while (True):
