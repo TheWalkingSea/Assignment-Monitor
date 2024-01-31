@@ -75,7 +75,7 @@ def auth(sess: requests.Session, req1: requests.Response) -> requests.Response:
         'Password': cf['password'],
         'AuthMethod': 'FormsAuthentication',
     }
-    input(data)
+    # input(data)
     response = sess.post('https://pascosso.pasco.k12.fl.us/adfs/ls/', params=params, headers=headers, data=data, cookies=req1.cookies)
     # Previous request returns a redirect, below request just goes to the redirect which redirects to another page
     response = sess.get('https://pascosso.pasco.k12.fl.us/adfs/ls/', params=params, headers=headers, cookies=req1.cookies)
@@ -97,7 +97,6 @@ def sendSAMLReq(sess: requests.Session) -> None:
     }
     response = sess.post('https://pascosso.pasco.k12.fl.us/adfs/ls/', params=params, headers=headers, data=data)
     match = re.findall(r'value=\"(.+?)\"', response.text)
-    sess.get('https://pascosso.pasco.k12.fl.us/adfs/ls/', headers=headers)
 
     params = {
         'id': 'saml',
@@ -105,7 +104,8 @@ def sendSAMLReq(sess: requests.Session) -> None:
 
     data = {
         'SAMLResponse': match[0],
-        'RelayState': match[1]
+        'RelayState': match[1],
+        "SameSite": 1
     }
 
 
@@ -247,12 +247,9 @@ def main() -> None:
     sess = requests.Session()
     resp = getSAMLCookies(sess)
     print("Getting SAML Cookies")
-    input(resp.cookies.get_dict().keys())
     auth(sess, resp)
-    input(resp.cookies.get_dict().keys())
     print("Logged in...")
     resp = sendSAMLReq(sess)
-    input(resp.cookies.get_dict())
     print("Sent SAML Cookies, authorization complete")
     print("Monitoring grades")
     while (True):
