@@ -31,6 +31,9 @@ params = {
     'client-request-id': 'd9d56afb-4e10-4446-b11a-0040020000db',
 }
 
+class BadResponse(Exception):
+    pass
+
 def getSAMLCookies(sess: requests.Session) -> requests.Response:
     """ Gets SAML Cookies that are required to make any type of request to the website.
     
@@ -129,15 +132,36 @@ def sendWebhook(embed: discord.Embed, courseID: int) -> None:
     """
     WEBHOOK.send(content=f"<@&{courseData[courseID][0]}>", allowed_mentions=discord.AllowedMentions(roles=True), embed=embed, username="Opportunity", avatar_url="https://cdn.discordapp.com/attachments/891493636611641345/1163987969401688175/NASA_Mars_Rover.jpg?ex=65419345&is=652f1e45&hm=e7a03c4eadedbc69966ab5362ce379b04dfdb6e04f2c4bc3f89dedc2d88e22fb&")
 
+def isBadResponse(payload: str) -> bool:
+    """ Checks if a bad response was returned from the server. 
+    This usually has to do with a server side error and you can reestablish a new connection to resolve the error
+    
+    Parameters:
+    (str)payload: The payload from the server; Either json or HTML document
+    
+    Returns:
+    (bool): A boolean representing whether or not a bad response was returned from the server
+    
+    """
+    return bool(re.search(r'An error occurred', payload))
+
 def compareDifferences(payload: str, courseID: int) -> None:
     """ Takes the payload beforehand and the new payload to compare them and determine if an assignment was updated or graded for a certain course.
     
     Parameters
-    (payload): The new payload
-    (courseID): The ID of the course currently being examined
+    (str)payload: The new payload
+    (int)courseID: The ID of the course currently being examined
     
+
+    Raises:
+    (BadResponse): When the server returns a server side error, BadResponse will be raised
+
+
     """
     global before
+    
+    if (isBadResponse(payload)):
+        raise BadResponse()
     try:
         data: list = json.loads(payload)[0]['result']['data']
     except:  
@@ -238,7 +262,10 @@ def checkGrades(sess: requests.Session) -> None:
             with open("dmp", "w") as f:
                 f.write(response.text)
                 print(f"ERROR OCCURRED: {response.status_code}, Error: {e}")
-        compareDifferences(response.text, courseID)
+        try:
+            compareDifferences(response.text, courseID)
+        except BadResponse:
+            return False
     time.sleep(60)
     return True
 
