@@ -237,7 +237,7 @@ def checkGrades(sess: requests.Session) -> None:
         return False
     for courseID in COURSEIDS:
         jwttoken = sess.cookies.get('__session_jwt__')
-        sess.get('https://pasco.focusschoolsoftware.com/focus/assets/translations/gettext.js.php?locale=en_US&m=1697492306?m=', headers=headers)
+
         params = {
             'modname': 'Grades/StudentGBGrades.php',
             'force_package': 'SIS',
