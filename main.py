@@ -17,7 +17,7 @@ QUARTERID = cf['quarterId']
 # Q3 107017
 # Q4 107018
 
-DEBUG = False
+DEBUG = True
 
 before = {}
 
