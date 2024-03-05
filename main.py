@@ -17,6 +17,7 @@ QUARTERID = cf['quarterId']
 # Q3 107017
 # Q4 107018
 
+DEBUG = False
 
 before = {}
 
@@ -188,6 +189,10 @@ def compareDifferences(payload: str, courseID: int) -> None:
     #         "PERCENT": "100%",
     #     })
     # Testing ^^^
+    if DEBUG:
+        with open("dmp", "w") as f: # FOR DEBUGGING
+            f.write(payload)
+
     def getAssignmentData(title: str):
         for item in before[courseID]:
             if (item['ASSIGNMENT_TITLE'] == title):
