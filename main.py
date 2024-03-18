@@ -144,7 +144,7 @@ def isBadResponse(payload: str) -> bool:
     (bool): A boolean representing whether or not a bad response was returned from the server
     
     """
-    return bool(re.search(r'An error occurred', payload))
+    return bool(re.search(r'(An error occurred)|(terminating connection due to administrator command)', payload))
 
 def compareDifferences(payload: str, courseID: int) -> None:
     """ Takes the payload beforehand and the new payload to compare them and determine if an assignment was updated or graded for a certain course.
