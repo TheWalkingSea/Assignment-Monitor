@@ -1,0 +1,12 @@
+{
+    "studentId": 123456,
+    "password": "Sample12!",
+    "courseData": {
+        "123456": [1111111111111111111, "Course 1"],
+        "123457": [1111111111111111111, "Course 2"],
+        "123458": [1111111111111111111, "Course 3"],
+        "123459": [1111111111111111111, "Course 4"]
+    },
+    "webhook": "https://discord.com/api/webhooks/1111111111111111111/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "quarterId": 107017
+}
