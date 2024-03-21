@@ -169,6 +169,7 @@ def compareDifferences(payload: str, courseID: int) -> None:
         with open("dmp", "w") as f:
             f.write(payload)
             print(f"ERROR OCCURRED: {payload}")
+            raise BadResponse()
         
     if (courseID not in before):
         before[courseID] = data
